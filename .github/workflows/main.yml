@@ -1,0 +1,32 @@
+name: Publish docs via GitHub Pages
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install -r requirements.txt
+      - run: mkdocs gh-deploy --force
+#       - name: Discord Commits      
+#         uses: Sniddl/discord-commits@v1.2
+#         with:
+#           webhook: ${{ secrets.DISCORD_WEBHOOK }}
+#           message: "Successful commit to **{{ github.context.payload.repository.owner.name }}/{{ github.context.payload.repository.name}}**.\nDiff: {{ github.context.payload.compare }}\n"
+#           embed: '{ "title": "{{ commit.title }}", "description": "{{ commit.description }}", "url": "{{ commit.url }}", "author": { "name": "{{ commit.author.name }} ({{ commit.author.username }})", "icon_url": "https://avatars.io/gravatar/{{ commit.author.email }}"} }'
+      - name: Discord Commits
+        uses: Tedeapolis/discord-commits@v1.2.5
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        if: "${{ env.WEBHOOK != '' }}"
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          message: "Successful commit to **{{ github.context.payload.repository.name}}**.\nDiff: {{ github.context.payload.compare }}"
+          embed: '{"title":"{{ commit.title }}","description":"{{ commit.description }}","url":"{{ commit.url }}","author":{"name":"{{ commit.author.name }}","icon_url":"https://github.com/{{ commit.author.username ?? commit.author.name }}.png"}}'
